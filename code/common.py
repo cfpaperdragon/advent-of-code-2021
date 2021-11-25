@@ -1,4 +1,5 @@
 # common.py
+# common stuff that can be used for several days
 
 def echo(some_text):
     print(some_text)
