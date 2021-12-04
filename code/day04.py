@@ -1,5 +1,6 @@
 # day04
 import common
+import matrix
 
 def parse_numbers(number_string):
     number_list = number_string.strip().split(",")
@@ -23,11 +24,12 @@ def parse_card(card_string_list):
 
 
 def get_number(card, x, y):
-    return card[y][x][0]
+    return matrix.get_value(card, x, y, lambda a: a[0])
+
 
 def mark_number(card, x, y):
-    card[y][x] = (card[y][x][0], "X")
-    # I don't know if I have to return the card here
+    matrix.set_value(card, x, y, "X", lambda a,b: (a[0], b))
+
 
 def card_mark_number(number, card):
     for y in card.keys():
@@ -37,9 +39,8 @@ def card_mark_number(number, card):
                 return
 
 
-
 def is_marked(card, x, y):
-    return card[y][x][1] == "X"
+    return matrix.get_value(card, x, y, lambda a: a[1]) == "X"
 
 
 def have_line(card):
@@ -66,14 +67,10 @@ def have_column(card):
 
 
 def print_card(card, with_marks = False):
-    for y in card.keys():
-        row = ""
-        for x in card[y].keys():
-            if with_marks:
-                row += str(card[y][x][0]) + "(" + str(card[y][x][1]) + ")" + " "
-            else:
-                row += str(card[y][x][0]) + " "
-        print(row)
+    if with_marks:
+        matrix.print_matrix(card, lambda a: str(a[0]) + "(" + a[1] + ")" )
+    else:
+        matrix.print_matrix(card)
 
 
 def print_card_list(card_list):
