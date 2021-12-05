@@ -22,23 +22,17 @@ def find_max(vector_list):
     max_x = 0
     max_y = 0
     for vector in vector_list:     
-        if vector[0][0] > max_x:
-            max_x = vector[0][0]
-        if vector[0][1] > max_y:
-            max_y = vector[0][1]
-        if vector[1][0] > max_x:
-            max_x = vector[1][0]
-        if vector[1][1] > max_y:
-            max_y = vector[1][1]
+        max_x = max(max_x, vector[0][0], vector[1][0])
+        max_y = max(max_y, vector[0][1], vector[1][1])
     return max_x, max_y
 
 
-def cover_one_vector_one_diagonal(pos_matrix, start_x, start_y, advance_x, advance_y, end_x, end_y):
+def cover_one_vector_method(pos_matrix, start_x, start_y, advance_x, advance_y, end_x, end_y):
     x = start_x
     y = start_y
     # print(x, y)
     # print(end_x, end_y)
-    while x != end_x and y != end_y:
+    while x != end_x or y != end_y:
         # print(x, y)
         matrix.set_value(pos_matrix, x, y, matrix.get_value(pos_matrix, x, y) + 1)
         x = advance_x(x)
@@ -52,19 +46,19 @@ def cover_one_vector_diagonals(pos_matrix, vector):
 
     # there's 4 directions possible
     if start[0] < end[0] and start[1] < end[1]:
-        cover_one_vector_one_diagonal(pos_matrix, start[0], start[1], 
+        cover_one_vector_method(pos_matrix, start[0], start[1], 
             lambda x: x+1, lambda y: y+1, end[0], end[1])
 
     elif start[0] > end[0] and start[1] > end[1]:
-        cover_one_vector_one_diagonal(pos_matrix, end[0], end[1], 
+        cover_one_vector_method(pos_matrix, end[0], end[1], 
             lambda x: x+1, lambda y: y+1, start[0], start[1])
 
     elif start[0] < end[0] and start[1] > end[1]:
-        cover_one_vector_one_diagonal(pos_matrix, start[0], start[1], 
+        cover_one_vector_method(pos_matrix, start[0], start[1], 
             lambda x: x+1, lambda y: y-1, end[0], end[1])
     
     elif start[0] > end[0] and start[1] < end[1]:
-        cover_one_vector_one_diagonal(pos_matrix, start[0], start[1], 
+        cover_one_vector_method(pos_matrix, start[0], start[1], 
             lambda x: x-1, lambda y: y+1, end[0], end[1])
     
 
@@ -75,30 +69,14 @@ def cover_one_vector(pos_matrix, vector, diagonals = False):
     
     # same x?
     if start[0] == end[0]:
-        # range only works from smaller to bigger
-        if start[1] < end[1]:
-            for y in range(start[1], end[1]):
-                matrix.set_value(pos_matrix, start[0], y, matrix.get_value(pos_matrix, start[0], y) + 1)
-            # don't forget end position
-            matrix.set_value(pos_matrix, start[0], end[1], matrix.get_value(pos_matrix, end[0], end[1]) + 1)
-        elif start[1] > end[1]:
-            for y in range(end[1], start[1]):
-                matrix.set_value(pos_matrix, start[0], y, matrix.get_value(pos_matrix, start[0], y) + 1)
-            # don't forget start position
-            matrix.set_value(pos_matrix, start[0], start[1], matrix.get_value(pos_matrix, start[0], start[1]) + 1)
-        # else: # not sure I need this condition
+        cover_one_vector_method(pos_matrix, start[0], min(start[1], end[1]), 
+            lambda x: x, lambda y: y+1, start[0], max(start[1], end[1]))
+
     # same y?
     elif start[1] == end[1]:
-        if start[0] < end[0]:
-            for x in range(start[0], end[0]):
-                matrix.set_value(pos_matrix, x, start[1], matrix.get_value(pos_matrix, x, start[1]) + 1)
-            # don't forget end position    
-            matrix.set_value(pos_matrix, end[0], end[1], matrix.get_value(pos_matrix, end[0], end[1]) + 1)
-        elif start[0] > end[0]:
-            for x in range(end[0], start[0]):
-                matrix.set_value(pos_matrix, x, start[1], matrix.get_value(pos_matrix, x, start[1]) + 1)
-            # don't forget start position
-            matrix.set_value(pos_matrix, start[0], start[1], matrix.get_value(pos_matrix, start[0], start[1]) + 1)
+        cover_one_vector_method(pos_matrix, min(start[0], end[0]), start[1], 
+            lambda x: x+1, lambda y: y, max(start[0], end[0]), start[1])
+
     # diagonals?
     else:
         if diagonals:
@@ -113,12 +91,7 @@ def cover_points(pos_matrix, vector_list, diagonals = False):
 
 
 def calculate_score(pos_matrix):
-    count = 0
-    for y in pos_matrix.keys():
-        for x in pos_matrix[y].keys():
-            if matrix.get_value(pos_matrix, x, y) >= 2:
-                count += 1
-    return count
+    return matrix.do_operation(pos_matrix, lambda a,b: a+1, lambda a: a >= 2, 0)
 
 
 def calculate_part1(diagonals = False):
@@ -139,5 +112,5 @@ def calculate_part2():
     # cover_points(test_matrix, inputs, True)
 
 # execute
-# calculate_part1()
+calculate_part1()
 calculate_part2()
