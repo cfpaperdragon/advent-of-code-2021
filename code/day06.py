@@ -22,7 +22,6 @@ def parse_input_string(input_string):
 # 1: number of fish in one state
 # 2: number of fish in two state
 # 3: number of fish in three state
-...
 def make_lanternfish_storage(lanternfish_list):
     lanternfish_dict = {}
     # initialize

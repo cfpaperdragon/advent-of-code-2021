@@ -2,6 +2,7 @@
 
 import common
 import matrix
+from datetime import datetime
 
 # input: "0,9"
 # output: (0, 9)
@@ -95,6 +96,9 @@ def calculate_score(pos_matrix):
 
 
 def calculate_part1(diagonals = False):
+    now = datetime.now()
+    current_time = now.strftime("%H:%M:%S")
+    print("Current Time =", current_time)
     inputs = common.read_input_to_function_list("input//day05//input.txt", parse_vectors)
     # print(inputs)
     max_x, max_y = find_max(inputs)
@@ -103,6 +107,9 @@ def calculate_part1(diagonals = False):
     # matrix.print_matrix(new_matrix)
     score = calculate_score(new_matrix)
     print(score)
+    now = datetime.now()
+    current_time = now.strftime("%H:%M:%S")
+    print("Current Time =", current_time)
 
 
 def calculate_part2():
@@ -110,6 +117,13 @@ def calculate_part2():
     # test_matrix = matrix.create_empty(5, 5, 0)
     # inputs = [((3, 0), (0, 3))]
     # cover_points(test_matrix, inputs, True)
+
+
+
+
+
+
+
 
 # execute
 calculate_part1()

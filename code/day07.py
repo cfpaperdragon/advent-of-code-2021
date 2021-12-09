@@ -77,5 +77,7 @@ def calculate_part2():
     print(min_value)
 
 # execute
-calculate_part1()
+# calculate_part1()
 calculate_part2()
+
+# can probably improve the execution time buy having a cache of fuel to position difference
