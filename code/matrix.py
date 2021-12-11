@@ -42,6 +42,91 @@ def do_operation(matrix, operation_function, condition_function, start_value):
                 result = operation_function(result, get_value(matrix, x, y))
     return result
 
+
+def read_input_to_matrix(filename, function):
+    result = {}
+    y = 0
+    with open(filename) as file:
+        line = file.readline()
+        while line:
+            result[y] = {}
+            number_str = line.strip()
+            for x in range(len(number_str)):
+                result[y][x] = function(number_str[x])
+            line = file.readline()
+            y += 1
+    return result
+
+
+def get_adjacents(x, y, max_x, max_y, include_diagonals = False):
+    adjacents = []
+    # first row
+    if y == 0:
+        if x == 0:
+            adjacents.append((x+1, y))
+            adjacents.append((x, y+1))
+            if include_diagonals:
+                adjacents.append((x+1, y+1))
+        elif x == max_x:
+            adjacents.append((x-1, y))
+            adjacents.append((x, y+1))
+            if include_diagonals:
+                adjacents.append((x-1, y+1))
+        else:
+            adjacents.append((x+1, y))
+            adjacents.append((x, y+1))
+            adjacents.append((x-1, y))
+            if include_diagonals:
+                adjacents.append((x+1, y+1))
+                adjacents.append((x-1, y+1))
+    # last row
+    elif y == max_y:
+        if x == 0:
+            adjacents.append((x, y-1))
+            adjacents.append((x+1, y))
+            if include_diagonals:
+                adjacents.append((x+1, y-1))
+        elif x == max_x:
+            adjacents.append((x-1, y))
+            adjacents.append((x, y-1))
+            if include_diagonals:
+                adjacents.append((x-1, y-1))
+        else:
+            adjacents.append((x, y-1))
+            adjacents.append((x+1, y))
+            adjacents.append((x-1, y))
+            if include_diagonals:
+                adjacents.append((x+1, y-1))
+                adjacents.append((x-1, y-1))
+    # everything else
+    else:
+        if x == 0:
+            adjacents.append((x, y-1))
+            adjacents.append((x+1, y))
+            adjacents.append((x, y+1))
+            if include_diagonals:
+                adjacents.append((x+1, y-1))
+                adjacents.append((x+1, y+1))
+        elif x == max_x:
+            adjacents.append((x-1, y))
+            adjacents.append((x, y+1))
+            adjacents.append((x, y-1))
+            if include_diagonals:
+                adjacents.append((x-1, y-1))
+                adjacents.append((x-1, y+1))
+        else:
+            adjacents.append((x+1, y))
+            adjacents.append((x, y+1))
+            adjacents.append((x, y-1))
+            adjacents.append((x-1, y))
+            if include_diagonals:
+                adjacents.append((x+1, y-1))
+                adjacents.append((x+1, y+1))
+                adjacents.append((x-1, y-1))
+                adjacents.append((x-1, y+1))
+    return adjacents
+
+
 # simple tests        
 
 def test_matrix():
@@ -51,6 +136,7 @@ def test_matrix():
     print_matrix(new_matrix)
     result = do_operation(new_matrix, lambda a,b: a+b, lambda a: a > 1, 0)
     print(result)
+
 
 
 # test_matrix()
