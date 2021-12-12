@@ -39,6 +39,18 @@ def print_graph(graph):
         print(row)
 
 
+def can_repeat_small_cave(path):
+    lowercase_nodes = {}
+    for node in path:
+        if node.islower():
+            if node in lowercase_nodes.keys():
+                return False
+            else:
+                lowercase_nodes[node] = 1
+                continue
+    return True
+
+
 def calculate_paths(graph, start_node, part2=False):
     paths = []
     # a path is made of the list of the nodes visited so far, where the last node
@@ -54,9 +66,14 @@ def calculate_paths(graph, start_node, part2=False):
             current_node = path[-1]
             for node in graph[current_node].keys():
                 if graph[current_node][node] == 1: # reachable
+                    if node == "start": # can never go back to start
+                        continue
                     if node in path and node.islower():
                         if not part2: 
                             continue # cannot go to small cave more than once
+                        else:
+                            if not can_repeat_small_cave(path):
+                                continue
                     copy_path = path.copy()
                     copy_path.append(node)
 
@@ -78,7 +95,7 @@ def calculate_part1():
     print(len(complete_paths))
 
 def calculate_part2():
-    inputs = common.read_input_to_function_list("input//day12//example01.txt", str)
+    inputs = common.read_input_to_function_list("input//day12//input.txt", str)
     graph = create_graph(inputs)
     print_graph(graph)
     complete_paths = calculate_paths(graph, "start", True)
@@ -87,5 +104,5 @@ def calculate_part2():
     print(len(complete_paths))
 
 # execute
-calculate_part1()
-# calculate_part2()
+# calculate_part1()
+calculate_part2()
