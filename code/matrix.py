@@ -37,7 +37,7 @@ def set_value(matrix, x, y, value, function = None):
 def do_operation(matrix, operation_function, condition_function, start_value):
     result = start_value
     for y in matrix.keys():
-        for x in matrix.keys():
+        for x in matrix[y].keys():
             if condition_function(get_value(matrix, x, y)):
                 result = operation_function(result, get_value(matrix, x, y))
     return result
