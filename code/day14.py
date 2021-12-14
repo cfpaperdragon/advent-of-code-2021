@@ -70,7 +70,7 @@ def calculate_part2():
     # made_from_parts = "N" + cache["NN"] + cache["NC"] + cache["CB"]
     # polymer = apply_template(template, rules, 4)
     # print(polymer == made_from_parts)
-    elements_count = count_elements("N", {})
+    elements_count = count_elements(template[0], {})
     for i in range(1, len(polymer_20_step)):
             pair = polymer_20_step[i-1:i+1]
             if pair in cache.keys():
