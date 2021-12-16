@@ -58,11 +58,11 @@ def read_input_to_matrix(filename, function):
     return result
 
 
-def get_adjacents(x, y, max_x, max_y, include_diagonals = False):
+def get_adjacents(x, y, max_x, max_y, include_diagonals = False, min_x = 0, min_y = 0):
     adjacents = []
     # first row
-    if y == 0:
-        if x == 0:
+    if y == min_y:
+        if x == min_x:
             adjacents.append((x+1, y))
             adjacents.append((x, y+1))
             if include_diagonals:
@@ -81,7 +81,7 @@ def get_adjacents(x, y, max_x, max_y, include_diagonals = False):
                 adjacents.append((x-1, y+1))
     # last row
     elif y == max_y:
-        if x == 0:
+        if x == min_x:
             adjacents.append((x, y-1))
             adjacents.append((x+1, y))
             if include_diagonals:
@@ -100,7 +100,7 @@ def get_adjacents(x, y, max_x, max_y, include_diagonals = False):
                 adjacents.append((x-1, y-1))
     # everything else
     else:
-        if x == 0:
+        if x == min_x:
             adjacents.append((x, y-1))
             adjacents.append((x+1, y))
             adjacents.append((x, y+1))
