@@ -45,7 +45,7 @@ def calculate_part1():
 
     simulate(start_velocity_example, (target_x0, target_x1, target_y0, target_y1), 20)
 
-    # 1. I want that velocity x reaches 0 in the target area
+    # 1. I want that velocity x reaches 0 in the target area - this is wrong
     # 2. velocity y reaches 0 at the highest point
 
 
