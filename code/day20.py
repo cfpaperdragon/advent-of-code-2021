@@ -110,39 +110,40 @@ def count_lit_pixels(matrix, min_x, max_x, min_y, max_y, index):
     return total
 
 
-def calculate_part1():
+def calculate_part1(max_loop=2):
     inputs = common.read_input_to_function_list("input//day20//input.txt", str)
     # print(inputs)
     enhance_string = inputs[0]
     matrix, min_x, min_y, max_x, max_y = parse_initial_matrix(inputs)
     # print(min_x, min_y, max_x, max_y)
     loop = 0
-    # grow_matrix(matrix, min_x, min_y, max_x, max_y, (".", "."))
+    while loop < max_loop:
     
-    grow_matrix(matrix, min_x-loop, min_y-loop, max_x+loop, max_y+loop, (".", "."))
-    # min_x_end, min_y_end, max_x_end, max_y_end = grow_matrix(matrix, min_x_1, min_y_1, max_x_1, max_y_1, (".", "."))
-    # print(min_x, min_y, max_x, max_y)
-    loop = 1
-    apply_enhance(matrix, min_x-loop, min_y-loop, max_x+loop, max_y+loop, 0, 1, enhance_string, ".")
+        grow_matrix(matrix, min_x-loop, min_y-loop, max_x+loop, max_y+loop, (".", "."))
+        # min_x_end, min_y_end, max_x_end, max_y_end = grow_matrix(matrix, min_x_1, min_y_1, max_x_1, max_y_1, (".", "."))
+        # print(min_x, min_y, max_x, max_y)
+        loop += 1
+        apply_enhance(matrix, min_x-loop, min_y-loop, max_x+loop, max_y+loop, 0, 1, enhance_string, ".")
     
-    # print_matrix(matrix, min_x-loop, max_x+loop, min_y-loop, max_y+loop, lambda a: a[0])
-    # print_matrix(matrix, min_x-loop, max_x+loop, min_y-loop, max_y+loop, lambda a: a[1])
-    # enhance 2nd time
+        # print_matrix(matrix, min_x-loop, max_x+loop, min_y-loop, max_y+loop, lambda a: a[0])
+        # print_matrix(matrix, min_x-loop, max_x+loop, min_y-loop, max_y+loop, lambda a: a[1])
+        # enhance 2nd time
     
-    grow_matrix(matrix, min_x-loop, min_y-loop, max_x+loop, max_y+loop, ("#", "#"))
-    loop = 2
-    apply_enhance(matrix, min_x-loop, min_y-loop, max_x+loop, max_y+loop, 1, 0, enhance_string, "#")
-    # print_matrix(matrix, min_x-loop, max_x+loop, min_y-loop, max_y+loop, lambda a: a[0])
-    # print_matrix(matrix, min_x_end, max_x_end, min_y_end, max_y_end, lambda a: a[1])
+        grow_matrix(matrix, min_x-loop, min_y-loop, max_x+loop, max_y+loop, ("#", "#"))
+        loop += 1
+        apply_enhance(matrix, min_x-loop, min_y-loop, max_x+loop, max_y+loop, 1, 0, enhance_string, "#")
+        # print_matrix(matrix, min_x-loop, max_x+loop, min_y-loop, max_y+loop, lambda a: a[0])
+        # print_matrix(matrix, min_x_end, max_x_end, min_y_end, max_y_end, lambda a: a[1])
 
+    print(loop)
     total = mat.do_operation(matrix, lambda a,b: a+1, lambda a: a[0] == "#", 0)
     # total = count_lit_pixels(matrix, min_x-loop, max_x+loop, min_y-loop, max_y+loop, 0)
     print(total)
 
 def calculate_part2():
-    common.echo("part 2")
+    calculate_part1(50)
     #do other stuff
 
 # execute
-calculate_part1()
-# calculate_part2()
+# calculate_part1()
+calculate_part2()
