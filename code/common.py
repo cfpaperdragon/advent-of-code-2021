@@ -1,5 +1,9 @@
 # common.py
 # common stuff that can be used for several days
+import uuid
+
+def get_unique_identifier():
+    return str(uuid.uuid4())
 
 def echo(some_text):
     print(some_text)
