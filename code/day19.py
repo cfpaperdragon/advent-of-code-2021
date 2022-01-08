@@ -122,7 +122,7 @@ def apply_matrix_to_vector(v1, rm):
     x = 0
     y = 1
     z = 2
-
+    # print(rm)
     x_coordinate = v1[x]*mat.get_value(rm, 0, 0) + v1[y]*mat.get_value(rm, 0, 1) + v1[z]*mat.get_value(rm, 0, 2)
     y_coordinate = v1[x]*mat.get_value(rm, 1, 0) + v1[y]*mat.get_value(rm, 1, 1) + v1[z]*mat.get_value(rm, 1, 2)
     z_coordinate = v1[x]*mat.get_value(rm, 2, 0) + v1[y]*mat.get_value(rm, 2, 1) + v1[z]*mat.get_value(rm, 2, 2)
@@ -145,8 +145,9 @@ def matched_vectors_to_matched_points(matched_vectors, rotation_matrix_list):
     rotation_matrix = None
     for i in range(len(matched_vectors)):
         vector_base = matched_vectors[i][0]
+        vector_base_dup = matched_vectors[i][1]
         other_vector = matched_vectors[i][2]
-        other_vector_dup = matched_vectors[i][2]
+        other_vector_dup = matched_vectors[i][3]
         # print(vector_base)
         # print(other_vector)
         # in a vector I have: (identifier, vector actual, vector length)
@@ -158,9 +159,16 @@ def matched_vectors_to_matched_points(matched_vectors, rotation_matrix_list):
         # mat.set_value(rotation_matrix, 2, 2, -1)
         if rotation_matrix == None: # first match
             for rm in rotation_matrix_list:
-                if is_match(vector_base[1], other_vector[1], rm):
+                # print("matrix")
+                # mat.print_matrix(rm)
+                if is_match(vector_base[1], other_vector[1], rm) or is_match(vector_base[1], other_vector_dup[1], rm):
                     # found the matrix
                     rotation_matrix = rm
+                elif is_match(vector_base_dup[1], other_vector[1], rm) or is_match(vector_base_dup[1], other_vector_dup[1], rm):
+                    # found the matrix
+                    rotation_matrix = rm
+        if rotation_matrix == None: # if it is till none, abort
+            break
 
         if is_match(vector_base[1], other_vector[1], rotation_matrix): # try to check if the first one matches
             if vector_base[0][0] not in matched_points:
@@ -184,11 +192,11 @@ def scanner_vectors_to_list(scanner_vectors):
     return scanner_vector_list
 
 
-def print_matched_points(matched_points, scanner_data, base_scanner, other_scanner):
+def print_matched_points(matched_points, final_scanner_data, scanner_data, base_scanner, other_scanner):
     for point in matched_points:
-        print(scanner_data[base_scanner][point], "=", scanner_data[other_scanner][matched_points[point]])
+        print(final_scanner_data[base_scanner][point], "=", scanner_data[other_scanner][matched_points[point]])
 
-def print_matched_vectors(matched_vectors, scanner_data, base_scanner, other_scanner):
+def print_matched_vectors(matched_vectors, final_scanner_data, scanner_data, base_scanner, other_scanner):
     for vector_quadruple in matched_vectors:
         base_vector = vector_quadruple[0]
         base_vector_dup = vector_quadruple[1]
@@ -198,9 +206,9 @@ def print_matched_vectors(matched_vectors, scanner_data, base_scanner, other_sca
         print("other:", other_vector)
         print("base_dup:", base_vector_dup)
         print("other_dup:", other_vector_dup)
-        print("base:", scanner_data[base_scanner][base_vector[0][0]], scanner_data[base_scanner][base_vector[0][1]])
+        print("base:", final_scanner_data[base_scanner][base_vector[0][0]], final_scanner_data[base_scanner][base_vector[0][1]])
         print("other:", scanner_data[other_scanner][other_vector[0][0]], scanner_data[other_scanner][other_vector[0][1]])
-        print("base_dup:", scanner_data[base_scanner][base_vector_dup[0][0]], scanner_data[base_scanner][base_vector_dup[0][1]])
+        print("base_dup:", final_scanner_data[base_scanner][base_vector_dup[0][0]], final_scanner_data[base_scanner][base_vector_dup[0][1]])
         print("other_dup:", scanner_data[other_scanner][other_vector_dup[0][0]], scanner_data[other_scanner][other_vector_dup[0][1]])
 
 
@@ -226,7 +234,7 @@ def create_rotation_matrix(alpha, beta, gama):
     return matrix
 
 
-def get_all_possible_rotation_matrixes():
+def get_all_possible_rotation_matrixes_o():
     rotation_matrix_list = []
     # positive z up
     rotation_matrix_list.append(create_rotation_matrix(0, 0, 0))
@@ -260,6 +268,14 @@ def get_all_possible_rotation_matrixes():
     rotation_matrix_list.append(create_rotation_matrix(270, -90, 0))
     return rotation_matrix_list
 
+def get_all_possible_rotation_matrixes():
+    rotation_matrix_list = []
+    for i in range(0, 4):
+        for j in range(0, 4):
+            for k in range(0, 4):
+                rotation_matrix_list.append(create_rotation_matrix(i*90, j*90, k*90))
+
+    return rotation_matrix_list
 
 def transpose_matrix(m, x_len, y_len):
     new_matrix = mat.create_empty(3, 3, 0)
@@ -277,11 +293,105 @@ def change_beacons_to_base_referential(scanner_data, final_scanner_data, current
         px_base = (current_scanner_position[0]+px_current[0], current_scanner_position[1]+px_current[1], current_scanner_position[2]+px_current[2])
         final_scanner_data[current_scanner][beacon_key] = px_base
 
+# each scanner is its own referential, points are measured in reference to the scanner
+# to compare data from different scanners, my idea was to calculate vectors (p1 -> p2)
+# then check if any vector from scanner 0 matches any vector from scanner 1 and etc    
+def move_scanner_data_to_scanner_base_referential(scanner_data, scanner_base_index, scanner_to_compare, final_scanner_data):
+    rotation_matrix_list = get_all_possible_rotation_matrixes()
+    
+    scanner_base_vectors = calculate_vectors(scanner_to_compare, final_scanner_data) # i want to guarantee I'm always comparing to referential 0
+    scanner_base_vector_list = scanner_vectors_to_list(scanner_base_vectors)
+    scanner_base_vector_list.sort(key=lambda a: a[2])
+
+    matched = []
+    for i in scanner_data.keys():
+        # print("checking scanner", i)
+        if i in final_scanner_data.keys():
+            continue # no need to compare with scanners already solved
+        scanner_i_vectors = calculate_vectors(i, scanner_data)
+        scanner_i_vectors_list = scanner_vectors_to_list(scanner_i_vectors)
+        scanner_i_vectors_list.sort(key=lambda a: a[2])
+
+        matched_vectors = match_vectors(scanner_base_vector_list, scanner_i_vectors_list)
+        if len(matched_vectors) == 0: # no match
+            print("no match between", scanner_to_compare, i)
+            continue
+
+        matched_points, rotation_matrix = matched_vectors_to_matched_points(matched_vectors, rotation_matrix_list)
+        if len(matched_points) < 3: # reduced matching to 3 instead of 12. this is the first value that matches all scanners - there is probably something fishy in the code
+            # print(len(matched_vectors))
+            # print_matched_vectors(matched_vectors, final_scanner_data, scanner_data, scanner_to_compare, i)
+            # mat.print_matrix(rotation_matrix)
+            print("not enough matched points", len(matched_points), scanner_to_compare, i)
+            continue
+
+        # print_matched_points(matched_points, scanner_data, scanner_base_index, i)
+
+        # calculate scanner i coordinates in scanner base referential
+        # S1 = -P1_1' + P1_0
+        # P1' is obtained by multiplying the inverse rotation matrix (also known as the transpose matrix)
+        p_identifier = list(matched_points.keys())[0] # use first point
+        p_base = final_scanner_data[scanner_to_compare][p_identifier]
+        p_i = scanner_data[i][matched_points[p_identifier]]
+
+        inverse_rotation_matrix = transpose_matrix(rotation_matrix, 3, 3)
+
+        p_i_in_base = apply_matrix_to_vector(p_i, inverse_rotation_matrix)
+        scanner_position = (-p_i_in_base[0]+p_base[0], -p_i_in_base[1]+p_base[1], -p_i_in_base[2]+ p_base[2])
+        # print(scanner_position)
+        
+        # next step is transposing all beacons from scanner i to scanner base referential
+        # PX_0 = S1 + PX_1'
+        final_scanner_data[i] = {}
+        change_beacons_to_base_referential(scanner_data, final_scanner_data, i, inverse_rotation_matrix, scanner_position)
+
+        matched.append(i)
+    return matched
+        
 
 def calculate_part1():
+    inputs = common.read_input_to_function_list("input//day19//input.txt", str)
+    scanner_data = process_scanner_data(inputs)
+    final_scanner_data = {}
+    final_scanner_data[0] = scanner_data[0]
+    matched_scanners = move_scanner_data_to_scanner_base_referential(scanner_data, 0, 0, final_scanner_data)
+    while len(matched_scanners) > 0:
+        print("matched_scanners", matched_scanners)
+        next_scanner = matched_scanners.pop(0)
+        print("next_scanner", next_scanner)
+        matched_scanners_more = move_scanner_data_to_scanner_base_referential(scanner_data, 0, next_scanner, final_scanner_data)
+        for s in matched_scanners_more:
+            if s not in matched_scanners:
+                matched_scanners.append(s)
+    
+    # print_scanner_data(final_scanner_data)
+    print(final_scanner_data.keys())
+    # final_scanner_data has all scanners in scanner 0 referential
+    all_beacons = []
+    for scanner in final_scanner_data:
+        for beacon in final_scanner_data[scanner]:
+            if final_scanner_data[scanner][beacon] not in all_beacons:
+                all_beacons.append(final_scanner_data[scanner][beacon])
+    
+    all_beacons.sort(key=lambda a: a[0])
+    # for b in all_beacons:
+    #     print(b)
+    print(len(all_beacons))
+
+
+def calculate_part2():
+    common.echo("part 2")
+    #do other stuff
+
+
+def calculate_part1_old():
     inputs = common.read_input_to_function_list("input//day19//example.txt", str)
     # print(inputs)
     scanner_data = process_scanner_data(inputs)
+    final_scanner_data = {}
+    final_scanner_data[0] = scanner_data[0]
+    final_scanner_data[1] = {}
+    final_scanner_data[4] = {}
     # print_scanner_data(scanner_data)
     # each scanner is its own referential, points are measured in reference to the scanner
     # to compare data from different scanners, my idea was to calculate vectors (p1 -> p2)
@@ -317,21 +427,28 @@ def calculate_part1():
     p1_1_moved = apply_matrix_to_vector(p1_1, inverse_rotation_matrix)
     s1 = (-p1_1_moved[0]+p1_0[0], -p1_1_moved[1]+p1_0[1], -p1_1_moved[2]+ p1_0[2])
     # print(s1)
-    final_scanner_data = {}
-    final_scanner_data[0] = scanner_data[0]
+
     # next step is transposing all beacons from scanner1 to scanner0 referential
     # PX_0 = S1 + PX_1'
-    final_scanner_data[1] = {}
+    # final_scanner_data[1] = {}
     change_beacons_to_base_referential(scanner_data, final_scanner_data, 1, inverse_rotation_matrix, s1)
     # then repeat the steps for the other scanners
     print_scanner_data(final_scanner_data)
 
+    scanner_1_vectors = calculate_vectors(1, final_scanner_data)
+    scanner_1_vectors_list = scanner_vectors_to_list(scanner_1_vectors)
+    scanner_1_vectors_list.sort(key=lambda a: a[2])
 
+    scanner_4_vectors = calculate_vectors(4, scanner_data)
+    scanner_4_vectors_list = scanner_vectors_to_list(scanner_4_vectors)
+    scanner_4_vectors_list.sort(key=lambda a: a[2])
 
-
-def calculate_part2():
-    common.echo("part 2")
-    #do other stuff
+    matched_vectors = match_vectors(scanner_1_vectors_list, scanner_4_vectors_list)
+    print_matched_vectors(matched_vectors, final_scanner_data, scanner_data, 1, 4)
+    # print_matched_vectors(matched_vectors, scanner_data, 0, 1)
+    matched_points, rotation_matrix = matched_vectors_to_matched_points(matched_vectors, rotation_matrix_list)
+    print_matched_points(matched_points, final_scanner_data, scanner_data, 1, 4)
+    mat.print_matrix(rotation_matrix)
 
 
 def test():
@@ -340,4 +457,5 @@ def test():
 # execute
 # test()
 calculate_part1()
+# calculate_part1_old()
 # calculate_part2()
