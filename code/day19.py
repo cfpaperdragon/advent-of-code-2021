@@ -296,7 +296,7 @@ def change_beacons_to_base_referential(scanner_data, final_scanner_data, current
 # each scanner is its own referential, points are measured in reference to the scanner
 # to compare data from different scanners, my idea was to calculate vectors (p1 -> p2)
 # then check if any vector from scanner 0 matches any vector from scanner 1 and etc    
-def move_scanner_data_to_scanner_base_referential(scanner_data, scanner_base_index, scanner_to_compare, final_scanner_data):
+def move_scanner_data_to_scanner_base_referential(scanner_data, scanner_base_index, scanner_to_compare, final_scanner_data, scanner_position_dict):
     rotation_matrix_list = get_all_possible_rotation_matrixes()
     
     scanner_base_vectors = calculate_vectors(scanner_to_compare, final_scanner_data) # i want to guarantee I'm always comparing to referential 0
@@ -339,6 +339,7 @@ def move_scanner_data_to_scanner_base_referential(scanner_data, scanner_base_ind
         p_i_in_base = apply_matrix_to_vector(p_i, inverse_rotation_matrix)
         scanner_position = (-p_i_in_base[0]+p_base[0], -p_i_in_base[1]+p_base[1], -p_i_in_base[2]+ p_base[2])
         # print(scanner_position)
+        scanner_position_dict[i] = scanner_position
         
         # next step is transposing all beacons from scanner i to scanner base referential
         # PX_0 = S1 + PX_1'
@@ -354,12 +355,14 @@ def calculate_part1():
     scanner_data = process_scanner_data(inputs)
     final_scanner_data = {}
     final_scanner_data[0] = scanner_data[0]
-    matched_scanners = move_scanner_data_to_scanner_base_referential(scanner_data, 0, 0, final_scanner_data)
+    scanner_position = {}
+    scanner_position[0] = (0, 0, 0)
+    matched_scanners = move_scanner_data_to_scanner_base_referential(scanner_data, 0, 0, final_scanner_data, scanner_position)
     while len(matched_scanners) > 0:
         print("matched_scanners", matched_scanners)
         next_scanner = matched_scanners.pop(0)
         print("next_scanner", next_scanner)
-        matched_scanners_more = move_scanner_data_to_scanner_base_referential(scanner_data, 0, next_scanner, final_scanner_data)
+        matched_scanners_more = move_scanner_data_to_scanner_base_referential(scanner_data, 0, next_scanner, final_scanner_data, scanner_position)
         for s in matched_scanners_more:
             if s not in matched_scanners:
                 matched_scanners.append(s)
@@ -377,6 +380,19 @@ def calculate_part1():
     # for b in all_beacons:
     #     print(b)
     print(len(all_beacons))
+    print(scanner_position)
+    manhattan_distances = []
+    for k in scanner_position:
+        for l in scanner_position:
+            if k >= l: 
+                continue
+            distance = abs(scanner_position[k][0]-scanner_position[l][0])
+            distance += abs(scanner_position[k][1]-scanner_position[l][1])
+            distance += abs(scanner_position[k][2]-scanner_position[l][2])
+            manhattan_distances.append(distance)
+
+    print(max(manhattan_distances))
+
 
 
 def calculate_part2():
