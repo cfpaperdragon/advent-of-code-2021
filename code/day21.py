@@ -87,41 +87,94 @@ def player_play(pos, score, rolls):
     return pos, score
 
 
-def turn_play(p1_pos, p1_score, p2_pos, p2_score, p1_wins, p2_wins):
+def turn_play(game_state_dict):
     rolls_dict = create_rolls()
-    for rolls1 in rolls_dict.keys():
-        for rolls2 in rolls_dict.keys():
-            # print(rolls)
-            # print(p1_pos, p1_score, p2_pos, p2_score, p1_wins, p2_wins)
-            # player 1 play
-            new_p1_pos, new_p1_score = player_play(p1_pos, p1_score, [rolls1])
-            if new_p1_score >= 21:
-                # print("player 1 wins")
-                p1_wins += rolls_dict[rolls1]
-                break
+    game_state_dict_result = {}
+    for game_state in game_state_dict.keys():
 
-            # player 2 play
-            new_p2_pos, new_p2_score = player_play(p2_pos, p2_score, [rolls2])
-            if new_p2_score >= 21:
-                # print("player 2 wins")
-                p2_wins += rolls_dict[rolls2]
-                continue
+        # player 1 rolls
+        for rolls1 in rolls_dict.keys():
+            
+            # player 2 rolls
+            for rolls2 in rolls_dict.keys():
 
-            # print(new_p1_pos, new_p1_score, new_p2_pos, new_p2_score, p1_wins, p2_wins)
-            new_p1_wins, new_p2_wins = turn_play(new_p1_pos, new_p1_score, new_p2_pos, new_p2_score, p1_wins, p2_wins)
-            p1_wins = new_p1_wins
-            p2_wins = new_p2_wins
-    # print(p1_wins, p2_wins)
-    return p1_wins, p2_wins # , new_universes
+                new_p1_pos, new_p1_score = player_play(game_state[0], game_state[1], [rolls1])
+
+                new_p2_pos, new_p2_score = player_play(game_state[2], game_state[3], [rolls2])
+
+                if new_p1_score >= 21:
+                    new_game_state = (new_p1_pos, new_p1_score, new_p2_pos, new_p2_score, True, 1)
+                    if new_game_state in game_state_dict_result:
+                        game_state_dict_result[new_game_state] += game_state_dict[game_state]*(rolls_dict[rolls1]*rolls_dict[rolls2]) # add these universes to the next
+                    else:
+                        game_state_dict_result[new_game_state] = game_state_dict[game_state]*(rolls_dict[rolls1]*rolls_dict[rolls2])
+                    break # because no need to continue this branch
+
+                if new_p2_score >= 21:
+                    new_game_state = (new_p1_pos, new_p1_score, new_p2_pos, new_p2_score, True, 2)
+                    if new_game_state in game_state_dict_result:
+                        game_state_dict_result[new_game_state] += game_state_dict[game_state]*(rolls_dict[rolls1]*rolls_dict[rolls2]) # add these universes to the next
+                    else:
+                        game_state_dict_result[new_game_state] = game_state_dict[game_state]*(rolls_dict[rolls1]*rolls_dict[rolls2])
+                    continue
+
+                new_game_state = (new_p1_pos, new_p1_score, new_p2_pos, new_p2_score, False, 0)
+                if new_game_state in game_state_dict_result:
+                    game_state_dict_result[new_game_state] += game_state_dict[game_state]*(rolls_dict[rolls1]*rolls_dict[rolls2]) # add these universes to the next
+                else:
+                    game_state_dict_result[new_game_state] = game_state_dict[game_state]*(rolls_dict[rolls1]*rolls_dict[rolls2])
+
+    return game_state_dict_result
 
 
 def calculate_part2(player1_start_pos, player2_start_pos):
-    print(create_rolls())
-    p1_wins, p2_wins = turn_play(player1_start_pos, 0, player2_start_pos, 0, 0, 0)
-    print(p1_wins, p2_wins)
+    game_state_dict = {}
+    # 0 = player1 pos
+    # 1 = player1 score
+    # 2 = player2 pos
+    # 3 = player2 score
+    # 4 = Is final state
+    # 5 = player that won (in final state)
+    initial_game_state = (player1_start_pos, 0, player2_start_pos, 0, False, 0)
+    game_state_dict[initial_game_state] = 1
+    game_state_dict_result = turn_play(game_state_dict)
+    game_state_dict_final = {}
+    # filter game results that reached a final state
+    counter = 1
+    while counter < 20:
+        counter += 1
+        game_state_dict_filtered = {}
+        for game_state in game_state_dict_result:
+            if game_state[4]:
+                if game_state in game_state_dict_final:
+                    game_state_dict_final[game_state] += game_state_dict_result[game_state]
+                else:
+                    game_state_dict_final[game_state] = game_state_dict_result[game_state]
+            else:
+                game_state_dict_filtered[game_state] = game_state_dict_result[game_state]
+
+        print(len(game_state_dict_result), len(game_state_dict_filtered))
+        game_state_dict_result = turn_play(game_state_dict_filtered)
+    
+    print(len(game_state_dict_final))
+    player1_wins = 0
+    player2_wins = 0
+    for game_state in game_state_dict_final:
+        if game_state[5] == 1:
+            player1_wins += game_state_dict_final[game_state]
+        else:
+            player2_wins += game_state_dict_final[game_state]
+
+    print(player1_wins, player2_wins)
+
     # print(len(new_universes))
+    # scratch all that
+    # let's create states and iterate over the states
+    # since the states repeat themselves, keep them in a dictionary, counting the number of universes in that state
+    # every round, iterate over the states without a winner - there aren't that many rounds
 
 # execute
 # calculate_part1(4, 8)
 # calculate_part1(1, 3)
-calculate_part2(4, 8)
+# calculate_part2(4, 8)
+calculate_part2(1, 3)
