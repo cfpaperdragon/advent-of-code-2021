@@ -63,8 +63,63 @@ def calculate_part1(player1_start_pos, player2_start_pos):
     #do other stuff
     print(min(player1_score, player2_score)*dice_counter)
 
+
+
+def create_rolls():
+    rolls_list = []
+    for i in [1, 2, 3]:
+        for j in [1, 2, 3]:
+            for k in [1, 2, 3]:
+                rolls_list.append(i+j+k)
+    rolls_dict = {}
+    for rolls in rolls_list:
+        if rolls in rolls_dict:
+            rolls_dict[rolls] += 1
+        else:
+            rolls_dict[rolls] = 1
+    return rolls_dict
+
+
+def player_play(pos, score, rolls):
+    for roll in rolls:
+        pos = move(pos, roll)
+    score += pos
+    return pos, score
+
+
+def turn_play(p1_pos, p1_score, p2_pos, p2_score, p1_wins, p2_wins):
+    rolls_dict = create_rolls()
+    for rolls1 in rolls_dict.keys():
+        for rolls2 in rolls_dict.keys():
+            # print(rolls)
+            # print(p1_pos, p1_score, p2_pos, p2_score, p1_wins, p2_wins)
+            # player 1 play
+            new_p1_pos, new_p1_score = player_play(p1_pos, p1_score, [rolls1])
+            if new_p1_score >= 21:
+                # print("player 1 wins")
+                p1_wins += rolls_dict[rolls1]
+                break
+
+            # player 2 play
+            new_p2_pos, new_p2_score = player_play(p2_pos, p2_score, [rolls2])
+            if new_p2_score >= 21:
+                # print("player 2 wins")
+                p2_wins += rolls_dict[rolls2]
+                continue
+
+            # print(new_p1_pos, new_p1_score, new_p2_pos, new_p2_score, p1_wins, p2_wins)
+            new_p1_wins, new_p2_wins = turn_play(new_p1_pos, new_p1_score, new_p2_pos, new_p2_score, p1_wins, p2_wins)
+            p1_wins = new_p1_wins
+            p2_wins = new_p2_wins
+    # print(p1_wins, p2_wins)
+    return p1_wins, p2_wins # , new_universes
+
+
 def calculate_part2(player1_start_pos, player2_start_pos):
-    print("boo")
+    print(create_rolls())
+    p1_wins, p2_wins = turn_play(player1_start_pos, 0, player2_start_pos, 0, 0, 0)
+    print(p1_wins, p2_wins)
+    # print(len(new_universes))
 
 # execute
 # calculate_part1(4, 8)
